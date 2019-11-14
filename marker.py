@@ -6,7 +6,13 @@ import glob
 import math
 import io
 
+text_color = (0.5, 0.5, 0.5)
+text_opacity = 0.3
+text_font = "Courier"
+
 def mark_pdf(src_filename, out_filename, text):
+    global text_color
+    global text_opacity
     existing_pdf = PdfFileReader(open(src_filename, "rb"))
 
     output = PdfFileWriter()
@@ -18,8 +24,9 @@ def mark_pdf(src_filename, out_filename, text):
         packet = io.BytesIO()
         angle = math.atan2(*pagesize)
         can = canvas.Canvas(packet, pagesize=pagesize)
+        can.setFont(text_font)
         can.setFontSize(textsize)
-        can.setFillColorRGB(0.5, 0.5, 0.5, 0.3)
+        can.setFillColorRGB(*text_color, text_opacity)
         can.translate(pagesize[0]/2 + textsize/4, pagesize[1]/2)
         can.rotate(90 - math.degrees(angle))
         can.drawCentredString(0, 0, text)
@@ -35,6 +42,5 @@ def mark_pdf(src_filename, out_filename, text):
     outputStream.close()
 
 if __name__ == "__main__":
-    mark_pdf("pdfs/sample.pdf", "dumm2.pdf", "Preliminary")
-    pdf = PdfFileReader(open("pdfs/dummy.pdf", "rb"))
+    mark_pdf("pdfs/sample.pdf", "sample_marked.pdf", "Preliminary")
     
