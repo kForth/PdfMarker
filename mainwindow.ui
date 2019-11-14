@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>405</width>
-    <height>388</height>
+    <width>400</width>
+    <height>717</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,8 +18,8 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>350</width>
-    <height>133</height>
+    <width>400</width>
+    <height>0</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -32,7 +32,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_3">
+   <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0">
     <property name="leftMargin">
      <number>5</number>
     </property>
@@ -45,10 +45,119 @@
     <property name="bottomMargin">
      <number>5</number>
     </property>
-    <property name="spacing">
+    <property name="horizontalSpacing">
      <number>0</number>
     </property>
-    <item row="0" column="0" rowspan="2">
+    <property name="verticalSpacing">
+     <number>5</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="QTabWidget" name="previewTabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="previewTab">
+       <attribute name="title">
+        <string>Preview</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,1">
+        <property name="leftMargin">
+         <number>5</number>
+        </property>
+        <property name="topMargin">
+         <number>5</number>
+        </property>
+        <property name="rightMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="0,1,0">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_5">
+            <property name="maximumSize">
+             <size>
+              <width>70</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Page Size:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="previewPagesizeDropdown">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="previewOrientationDropdown">
+            <property name="minimumSize">
+             <size>
+              <width>120</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>120</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <item>
+             <property name="text">
+              <string>Portait</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Landscape</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="previewCanvas">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">padding: 10px;
+background-color: #e9e9e9;
+border: 1px solid #000;</string>
+          </property>
+          <property name="text">
+           <string>preview</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item row="2" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="minimumSize">
        <size>
@@ -57,13 +166,25 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="singleTab">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>100</height>
+        </size>
+       </property>
        <attribute name="title">
         <string>Single PDF</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,1">
+       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
         <property name="spacing">
          <number>-1</number>
         </property>
@@ -77,49 +198,8 @@
          <number>5</number>
         </property>
         <property name="bottomMargin">
-         <number>0</number>
+         <number>5</number>
         </property>
-        <item>
-         <widget class="QLabel" name="label_13">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Watermark Text:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="singleWatermarkTextBox">
-          <property name="minimumSize">
-           <size>
-            <width>100</width>
-            <height>22</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>22</height>
-           </size>
-          </property>
-         </widget>
-        </item>
         <item>
          <widget class="QLabel" name="label">
           <property name="text">
@@ -175,10 +255,10 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <property name="topMargin">
-           <number>4</number>
+           <number>0</number>
           </property>
           <property name="bottomMargin">
-           <number>4</number>
+           <number>0</number>
           </property>
           <item>
            <widget class="QPushButton" name="singleOverwriteBtn">
@@ -220,19 +300,6 @@
           </item>
          </layout>
         </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="batchTab">
@@ -242,15 +309,21 @@
          <height>362</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>362</height>
+        </size>
+       </property>
        <attribute name="title">
         <string>Multi PDF</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0">
+       <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0">
         <property name="leftMargin">
          <number>5</number>
         </property>
         <property name="topMargin">
-         <number>0</number>
+         <number>5</number>
         </property>
         <property name="rightMargin">
          <number>5</number>
@@ -258,83 +331,10 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item row="8" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
-          <property name="spacing">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QRadioButton" name="addSuffixRadioBtn">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>90</width>
-              <height>22</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>90</width>
-              <height>22</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Add suffix</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="suffixTextBox">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>22</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>21</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="4" column="0" colspan="2">
-         <widget class="QLabel" name="label_10">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Output Folder:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0" colspan="2">
+        <property name="spacing">
+         <number>5</number>
+        </property>
+        <item row="7" column="0" colspan="2">
          <widget class="QPushButton" name="goBtn">
           <property name="minimumSize">
            <size>
@@ -353,7 +353,7 @@
           </property>
          </widget>
         </item>
-        <item row="8" column="0">
+        <item row="6" column="0">
          <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1">
           <property name="spacing">
            <number>0</number>
@@ -404,7 +404,7 @@
           </item>
          </layout>
         </item>
-        <item row="3" column="0" colspan="2">
+        <item row="1" column="0" colspan="2">
          <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,0">
           <property name="spacing">
            <number>0</number>
@@ -468,32 +468,7 @@
           </item>
          </layout>
         </item>
-        <item row="2" column="0" colspan="2">
-         <widget class="QLabel" name="label_9">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Source Folder:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
+        <item row="4" column="0">
          <widget class="QRadioButton" name="copyFilenameRadioBtn">
           <property name="minimumSize">
            <size>
@@ -515,61 +490,58 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QLineEdit" name="batchWatermarkTextBox">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>22</height>
-           </size>
+        <item row="6" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
+          <property name="spacing">
+           <number>0</number>
           </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>22</height>
-           </size>
+          <property name="rightMargin">
+           <number>0</number>
           </property>
-         </widget>
+          <item>
+           <widget class="QRadioButton" name="addSuffixRadioBtn">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>90</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>90</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Add suffix</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="suffixTextBox">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>21</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
-        <item row="0" column="0" colspan="2">
-         <widget class="QLabel" name="label_8">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Watermark Text:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="0" colspan="2">
-         <spacer name="verticalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="5" column="0" colspan="2">
+        <item row="3" column="0" colspan="2">
          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0,0">
           <property name="spacing">
            <number>0</number>
@@ -630,7 +602,32 @@
           </item>
          </layout>
         </item>
-        <item row="6" column="1">
+        <item row="2" column="0" colspan="2">
+         <widget class="QLabel" name="label_10">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>18</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>18</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Output Folder:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
          <widget class="QRadioButton" name="addWatermarkedSuffixRadioBtn">
           <property name="minimumSize">
            <size>
@@ -648,6 +645,251 @@
            <string>Add &quot;watermarked&quot; suffix</string>
           </property>
          </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QLabel" name="label_9">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>18</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>18</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Source Folder:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0" colspan="2">
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QTabWidget" name="watermarkTabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="watermarkTab">
+       <attribute name="title">
+        <string>Watermark</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="leftMargin">
+         <number>5</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_13">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>18</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>18</height>
+             </size>
+            </property>
+            <property name="sizeIncrement">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Watermark Text:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="watermarkTxtBox">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>22</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,1">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="minimumSize">
+             <size>
+              <width>35</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>35</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Font:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="fontDropdown"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <property name="topMargin">
+           <number>5</number>
+          </property>
+          <property name="bottomMargin">
+           <number>5</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="colorLabel">
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">border: 1px solid #000;</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="selectColorBtn">
+            <property name="minimumSize">
+             <size>
+              <width>110</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>110</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Select Color</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>55</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Opacity:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="opacitySlider">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>22</height>
+             </size>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="singleStep">
+             <number>5</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
