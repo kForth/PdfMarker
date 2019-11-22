@@ -10,14 +10,14 @@ text_color = (0.5, 0.5, 0.5)
 text_opacity = 0.3
 text_font = "Courier"
 
-def mark_pdf(src_filename, out_filename, text):
+def mark_pdf(src_filename, out_filename, text, *, only_first_page=False):
     global text_color
     global text_opacity
     existing_pdf = PdfFileReader(open(src_filename, "rb"))
 
     output = PdfFileWriter()
 
-    for i in range(existing_pdf.getNumPages()):
+    for i in range(1 if only_first_page else existing_pdf.getNumPages()):
         textsize = 150  # TODO: Set this dynamically somehow
         page = existing_pdf.getPage(0)
         pagesize = [float(e) for e in page.mediaBox[2:]]

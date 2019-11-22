@@ -6,6 +6,7 @@ from reportlab.lib import pagesizes, units
 
 import marker
 
+import tempfile
 import glob
 import io
 import os
@@ -78,7 +79,10 @@ class MainWindow(QMainWindow):
 
         ## Batch PDF
         self.selectSrcDirBtn.clicked.connect(self.handle_batch_select_src_dir_btn)
+        self.quickSrcDirBtn.clicked.connect(self.handle_quick_select_src_dir_btn)
         self.selectOutDirBtn.clicked.connect(self.handle_batch_select_out_dir_btn)
+        self.quickOutDirBtn.clicked.connect(self.handle_quick_select_out_dir_btn)
+        self.batchPreviewBtn.clicked.connect(self.handle_batch_preview_btn)
         self.goBtn.clicked.connect(self.batch_add_watermark)
 
         self.resize(1, 1)
@@ -167,49 +171,83 @@ class MainWindow(QMainWindow):
                     self.show_msg_box("Done", "Done", "Saved as " + out_filename.split("/")[-1], buttons=QMessageBox.Ok)
         self.setEnabled(True)
 
+    def handle_quick_select_src_dir_btn(self):
+        self.srcDirTextBox.setText(os.path.dirname(os.path.realpath(__file__)))
+
+    def handle_quick_select_out_dir_btn(self):
+        self.outDirTextBox.setText(os.path.dirname(os.path.realpath(__file__)))
+
     def handle_batch_select_src_dir_btn(self):
         new_dir = QFileDialog.getExistingDirectory(self, 'Source Directory')
         if new_dir:
-            self.batch_source_dir = new_dir
-            self.srcDirTextBox.setText(self.batch_source_dir)
+            self.srcDirTextBox.setText(new_dir)
 
     def handle_batch_select_out_dir_btn(self):
         new_dir = QFileDialog.getExistingDirectory(self, 'Output Directory')
         if new_dir:
-            self.batch_output_dir = new_dir
-            self.outDirTextBox.setText(self.batch_output_dir)
+            self.outDirTextBox.setText(new_dir)
+
+    def handle_batch_preview_btn(self):
+        tempdir = tempfile.gettempdir()
+        if self.srcDirTextBox.text():
+            files = glob.glob(f'{self.srcDirTextBox.text()}/*.pdf')
+            if files:
+                out_file = f"{tempdir}/preview.pdf"
+                marker.mark_pdf(files[0], f'{self.outDirTextBox.text()}/{out_file}', self.watermarkTxtBox.toPlainText(), only_first_page=True)
+                os.system("open " + out_file)
+            else:
+                self.show_msg_box("Cannot find any PDFs.", "Error", icon=QMessageBox.Warning)
+        else:
+            self.show_msg_box("Invalid Source Directory.", "Error", icon=QMessageBox.Warning)
+        print(tempdir)
 
     def batch_add_watermark(self):
         # TODO: use a cross-platform directory library
-        if self.batch_source_dir and self.batch_output_dir:
-            files = glob.glob(f'{self.batch_source_dir}/*.pdf') + glob.glob(f'{self.batch_source_dir}/*.PDF')
-            num_files = len(files)
-            s = "s" if num_files != 1 else ""
-            if self.batch_source_dir == self.batch_output_dir:
-                if not self.show_msg_box(f"Are you sure you want to overwrite {num_files} file{s}?"):
-                    return
-            self.batchProgressBar.setValue(0)
-            for i in range(len(files)):
-                src_file = files[i]
-                out_file = src_file.split("/")[-1].split("\]")[-1].split(".")[0]
-                if self.copyFilenameRadioBtn:
-                    out_file += ".pdf"
-                elif self.addWatermarkedSuffixRadioBtn:
-                    out_file += " watermarked.pdf"
-                elif self.addSuffixRadioBtn:
-                    out_file += self.suffixTextBox.text() + ".pdf"
-                elif self.addPrefixRadioBtn:
-                    out_file += self.prefixTextBox.text() + ".pdf"
+        if self.srcDirTextBox.text() and self.outDirTextBox.text():
+            files = glob.glob(f'{self.srcDirTextBox.text()}/*.pdf')
+            if files:
+                num_files = len(files)
+                s = "s" if num_files != 1 else ""
+                if self.srcDirTextBox.text() == self.outDirTextBox.text():
+                    if not self.show_msg_box(f"Are you sure you want to overwrite {num_files} file{s}?"):
+                        return
+                self.batchProgressBar.setValue(0)
+                for i in range(len(files)):
+                    src_file = files[i]
+                    out_file = src_file.split("/")[-1].split("\]")[-1].split(".")[0]
+                    if self.copyFilenameRadioBtn:
+                        out_file += ".pdf"
+                    elif self.addWatermarkedSuffixRadioBtn:
+                        out_file += " watermarked.pdf"
+                    elif self.addSuffixRadioBtn:
+                        out_file += self.suffixTextBox.text() + ".pdf"
+                    elif self.addPrefixRadioBtn:
+                        out_file += self.prefixTextBox.text() + ".pdf"
 
-                marker.mark_pdf(src_file, f'{self.batch_output_dir}/{out_file}', self.watermarkTxtBox.toPlainText())
-                self.batchProgressBar.setValue(int(i / len(files) * 100))
-            self.batchProgressBar.setValue(100)
+                    marker.mark_pdf(src_file, f'{self.outDirTextBox.text()}/{out_file}', self.watermarkTxtBox.toPlainText())
+                    self.batchProgressBar.setValue(int(i / len(files) * 100))
+                self.batchProgressBar.setValue(100)
+            else:
+                self.show_msg_box(
+                    text="Cannot find any PDFs.",
+                    title="Error",
+                    info=self.srcDirTextBox.text(),
+                    icon=QMessageBox.Warning
+                )
+        else:
+            src_invalid = not self.srcDirTextBox.text()
+            out_invalid = not self.outDirTextBox.text()
+            text = "Invalid "
+            text += (("Source & " if out_invalid else "Source ") if src_invalid else "")
+            text += "Output " if out_invalid else ""
+            text += "Director" + ("ies" if src_invalid and out_invalid else "y") + "."
+            self.show_msg_box(text=text, title="Error", icon=QMessageBox.Warning)
 
     def show_msg_box(self, text="", title="", info=None, icon=None, buttons=None):
         msg = QMessageBox(self)
         msg.setIcon(icon if icon is not None else QMessageBox.Information)
-        if text is not None: msg.setText("Done")
-        if title is not None: msg.setWindowTitle("Done")
+        if text is not None: msg.setText(text)
+        if title is not None: msg.setWindowTitle(title)
         if info is not None: msg.setInformativeText(info)
         if buttons is not None: msg.setStandardButtons(buttons)
         msg.exec_()
