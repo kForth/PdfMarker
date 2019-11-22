@@ -1,4 +1,10 @@
-pdfs/
-out/
 __pycache__/
+build/
+dist/
+icon.iconset/
+scripts/
+venv/
 .DS_Store
+icon.xcf
+py_mainwindow.py
+PdfMarker.spec

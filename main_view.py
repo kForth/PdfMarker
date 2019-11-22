@@ -1,6 +1,6 @@
-from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QColorDialog, QFontDialog
-from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QColor, QPixmap, QPainter
 from reportlab.pdfgen import canvas
 from reportlab.lib import pagesizes, units
 
@@ -8,22 +8,30 @@ import marker
 
 import glob
 import io
+import os
+
+from py_mainwindow import Ui_MainWindow
 
 class MainWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        uic.loadUi('mainwindow.ui', self)
+        # uic.loadUi('mainwindow.ui', self)
+        self.setupUi = Ui_MainWindow.setupUi
+        self.retranslateUi = lambda e: Ui_MainWindow.retranslateUi(self, e)
+        self.setupUi(self, self)
 
-        self.single_tab_height = 130
-        self.multi_tab_height = 222
+        self.single_tab_height = 132
+        self.multi_tab_height = 227
         self.tab_height_diff = abs(self.multi_tab_height - self.single_tab_height)
 
-        self.tabWidget.currentChanged.connect(self.updateTab)
-        self.tabWidget.setCurrentIndex(1)  # TODO: From last session?
-        self.updateTab(1)
+        self.previewPixmap = QPixmap(QSize(0, 0))
 
-        self.watermarkTxtBox.setText("Preliminary")  # TODO: Set text from config
+        self.resizeEvent = lambda e: self.update_preview()
+
+        self.tabWidget.currentChanged.connect(self.updateTab)
+
+        self.watermarkTxtBox.setPlainText("Preliminary")  # TODO: Set text from config
 
         self.previewPagesizeDropdown.addItem("From File")
         self.pagesizes = {}
@@ -48,7 +56,6 @@ class MainWindow(QMainWindow):
                 self.previewPagesizeDropdown.addItem(elem_str)
         self.previewPagesizeDropdown.currentTextChanged.connect(self.update_preview_page)
         self.previewOrientationDropdown.currentTextChanged.connect(self.update_preview_page)
-        self.update_preview_page()
 
         self.fontDropdown.clear()
         for font in canvas.Canvas(io.BytesIO()).getAvailableFonts():
@@ -64,6 +71,7 @@ class MainWindow(QMainWindow):
         self.opacitySlider.valueChanged.connect(self.handle_opacity_slider_change)
 
         ## Single PDF
+        self.singleSrcFileTxtBox.returnPressed.connect(lambda: self.update_preview())
         self.singleOverwriteBtn.clicked.connect(self.handle_single_overwrite)
         self.singleSaveAsBtn.clicked.connect(self.handle_single_save_as)
         self.singleSelectSrcBtn.clicked.connect(self.handle_select_single_src_file)
@@ -73,7 +81,11 @@ class MainWindow(QMainWindow):
         self.selectOutDirBtn.clicked.connect(self.handle_batch_select_out_dir_btn)
         self.goBtn.clicked.connect(self.batch_add_watermark)
 
+        self.resize(1, 1)
+        self.tabWidget.setCurrentIndex(1)  # TODO: From last session?
+        self.updateTab(1)
         self.show()
+        self.update_preview_page()
 
     def update_preview_page(self):
         size = self.previewPagesizeDropdown.currentText()
@@ -87,12 +99,12 @@ class MainWindow(QMainWindow):
             psize = self.pagesizes[size]
         if orientation.lower() == "landscape":
             psize = psize[::-1]  
-        self.update_preview(page=True)      
+        self.update_preview()
 
     def set_watermark_font(self, font=None):
         if font is not None:
             marker.text_font = font
-            self.update_preview(text=True)
+            self.update_preview()
 
     def set_watermark_color(self, *, color=None, opacity=None):
         if color is not None:
@@ -100,7 +112,7 @@ class MainWindow(QMainWindow):
             marker.text_color = [e/255.0 for e in color.getRgb()[:3]]
         if opacity is not None:
             marker.text_opacity = opacity
-        self.update_preview(text=True)
+        self.update_preview()
 
     def handle_font_dropdown_change(self, font):
         self.set_watermark_font(font)
@@ -119,12 +131,13 @@ class MainWindow(QMainWindow):
         if tab == 0:
             pass
             self.tabWidget.setFixedHeight(self.single_tab_height)
-            self.setMinimumHeight(550 - self.tab_height_diff)
+            self.setMinimumHeight(580 - self.tab_height_diff)
             preview_height -= self.tab_height_diff
         elif tab == 1:
             self.tabWidget.setFixedHeight(self.multi_tab_height)
-            self.setMinimumHeight(550)
+            self.setMinimumHeight(580)
             preview_height += self.tab_height_diff
+        self.update_preview()
         self.resize(self.width(), preview_height)
 
     def handle_select_single_src_file(self):
@@ -132,10 +145,11 @@ class MainWindow(QMainWindow):
         if filename:
             self.single_src_filename = filename
             self.singleSrcFileTxtBox.setText(self.single_src_filename)
+            self.update_preview()
 
     def handle_single_overwrite(self):
         self.setEnabled(False)
-        text = self.singleWatermarkTextBox.text()
+        text = self.watermarkTxtBox.toPlainText()
         if text: 
             if self.single_src_filename:
                 marker.mark_pdf(self.single_src_filename, self.single_src_filename, text)
@@ -144,7 +158,7 @@ class MainWindow(QMainWindow):
 
     def handle_single_save_as(self):
         self.setEnabled(False)
-        text = self.singleWatermarkTextBox.text()
+        text = self.watermarkTxtBox.toPlainText()
         if text: 
             if self.single_src_filename: 
                 out_filename = QFileDialog.getSaveFileName(self, 'Save PDF', self.single_src_filename, '*.pdf, *.PDF')[0]
@@ -187,19 +201,59 @@ class MainWindow(QMainWindow):
                 elif self.addPrefixRadioBtn:
                     out_file += self.prefixTextBox.text() + ".pdf"
 
-                marker.mark_pdf(src_file, f'{self.batch_output_dir}/{out_file}', self.batchWatermarkTextBox.text())
+                marker.mark_pdf(src_file, f'{self.batch_output_dir}/{out_file}', self.watermarkTxtBox.toPlainText())
                 self.batchProgressBar.setValue(int(i / len(files) * 100))
             self.batchProgressBar.setValue(100)
 
     def show_msg_box(self, text="", title="", info=None, icon=None, buttons=None):
         msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Information)
-        msg.setText("Done")
-        msg.setInformativeText()
-        msg.setWindowTitle("Done")
-        msg.setStandardButtons()
+        msg.setIcon(icon if icon is not None else QMessageBox.Information)
+        if text is not None: msg.setText("Done")
+        if title is not None: msg.setWindowTitle("Done")
+        if info is not None: msg.setInformativeText(info)
+        if buttons is not None: msg.setStandardButtons(buttons)
         msg.exec_()
             
 
-    def update_preview(self, page=False, text=False):
-        print("TODO: Update " + ("page" if page else "") + (" & " if page and text else "") + ("text" if text else ""))
+    def update_preview(self):
+        painter = QPainter()
+        pagesize = self.previewPagesizeDropdown.currentText()
+        orientation = self.previewOrientationDropdown.currentText().lower()
+        if pagesize == "From File":
+            if self.tabWidget.currentWidget() is self.singleTab:
+                filename = self.singleSrcFileTxtBox.text()
+                if filename and os.path.isfile(filename):
+                    # TODO: Get these from the file
+                    pagesize = pagesizes.letter
+                    orientation = "landscape"
+                else:
+                    pagesize = pagesizes.letter
+                    orientation = "landscape"
+            elif self.tabWidget.currentWidget() is self.batchTab:
+                pagesize = pagesizes.letter
+                orientation = "landscape"
+                # TODO: Get file from batch tab
+        else:
+            pagesize = self.pagesizes[pagesize]
+
+        pageRatio = pagesize[0] / pagesize[1]
+        if orientation == "landscape": pageRatio = 1 / pageRatio
+
+        drawHeight = self.previewCanvas.height() - 10
+        page = [
+            drawHeight * pageRatio,
+            drawHeight
+        ]
+        self.previewPixmap = QPixmap(self.previewCanvas.size())
+        painter.begin(self.previewPixmap)
+        painter.fillRect(0, 0, self.previewPixmap.width(), self.previewPixmap.height(), QColor(200, 200, 200))
+        pageRect = [
+            self.previewPixmap.width() / 2 - page[0] / 2,
+            self.previewPixmap.height() / 2 - page[1] / 2,
+            page[0],
+            page[1]
+        ]
+        painter.fillRect(pageRect[0] - 1, pageRect[1] - 1, pageRect[2] + 2, pageRect[3] + 2, QColor(0, 0, 0))
+        painter.fillRect(*pageRect, QColor(255, 255, 255))
+
+        self.previewCanvas.setPixmap(self.previewPixmap)
