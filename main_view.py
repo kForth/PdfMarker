@@ -76,6 +76,7 @@ class MainWindow(QMainWindow):
         self.singleOverwriteBtn.clicked.connect(self.handle_single_overwrite)
         self.singleSaveAsBtn.clicked.connect(self.handle_single_save_as)
         self.singleSelectSrcBtn.clicked.connect(self.handle_select_single_src_file)
+        self.singlePreviewBtn.clicked.connect(self.handle_single_preview_btn)
 
         ## Batch PDF
         self.selectSrcDirBtn.clicked.connect(self.handle_batch_select_src_dir_btn)
@@ -90,6 +91,15 @@ class MainWindow(QMainWindow):
         self.updateTab(1)
         self.show()
         self.update_preview_page()
+
+    def mark_pdf(self, text, src_file, out_file, *, only_first_page=False):
+        no_errors = False
+        try:
+            marker.mark_pdf(text, src_file, out_file, only_first_page=only_first_page)
+            no_errors = True
+        except Exception as ex:
+            self.show_msg_box("Error Processing PDF", "Error", ex.with_traceback(), QMessageBox.Warning)
+        return no_errors
 
     def update_preview_page(self):
         size = self.previewPagesizeDropdown.currentText()
@@ -147,28 +157,49 @@ class MainWindow(QMainWindow):
     def handle_select_single_src_file(self):
         filename = QFileDialog.getOpenFileName(self, 'Open PDF', '', '*.pdf, *.PDF')[0]
         if filename:
-            self.single_src_filename = filename
-            self.singleSrcFileTxtBox.setText(self.single_src_filename)
+            self.singleSrcFileTxtBox.setText(filename)
             self.update_preview()
+
+    def handle_single_preview_btn(self):
+        tempdir = tempfile.gettempdir()
+        src_file = self.singleSrcFileTxtBox.text()
+        if src_file:
+            out_file = f"{tempdir}/preview.pdf"
+            self.mark_pdf(src_file, out_file, self.watermarkTxtBox.toPlainText(), only_first_page=True)
+            os.system("open " + out_file)
+        else:
+            self.show_msg_box("Invalid Source File.", "Error", icon=QMessageBox.Warning)
 
     def handle_single_overwrite(self):
         self.setEnabled(False)
         text = self.watermarkTxtBox.toPlainText()
+        src_filename = self.singleSrcFileTxtBox.text()
         if text: 
-            if self.single_src_filename:
-                marker.mark_pdf(self.single_src_filename, self.single_src_filename, text)
-                self.show_msg_box("Done", "Done", "Saved as " + self.single_src_filename.split("/")[-1], buttons=QMessageBox.Ok)
+            if src_filename:
+                if self.mark_pdf(src_filename, src_filename, text):
+                    self.show_msg_box("Done", "Done", "Saved as " + src_filename.split("/")[-1], buttons=QMessageBox.Ok)   
+            else:
+                self.show_msg_box("Invalid Source Filename", "Error", src_filename, QMessageBox.Warning)
+        else:
+            self.show_msg_box("Invalid Watermark Text", "Error", text, QMessageBox.Warning)
         self.setEnabled(True)
 
     def handle_single_save_as(self):
         self.setEnabled(False)
         text = self.watermarkTxtBox.toPlainText()
         if text: 
-            if self.single_src_filename: 
-                out_filename = QFileDialog.getSaveFileName(self, 'Save PDF', self.single_src_filename, '*.pdf, *.PDF')[0]
+            src_filename = self.singleSrcFileTxtBox.text()
+            if src_filename: 
+                out_filename = QFileDialog.getSaveFileName(self, 'Save PDF', src_filename, '*.pdf, *.PDF')[0]
                 if out_filename:
-                    marker.mark_pdf(self.single_src_filename, out_filename, text)
-                    self.show_msg_box("Done", "Done", "Saved as " + out_filename.split("/")[-1], buttons=QMessageBox.Ok)
+                    if self.mark_pdf(src_filename, out_filename, text):
+                        self.show_msg_box("Done", "Done", "Saved as " + out_filename.split("/")[-1], buttons=QMessageBox.Ok)
+                else:
+                    self.show_msg_box("Invalid Output Filename", "Error", out_filename, QMessageBox.Warning)
+            else:
+                self.show_msg_box("Invalid Source Filename", "Error", src_filename, QMessageBox.Warning)
+        else:
+            self.show_msg_box("Invalid Watermark Text", "Error", text, QMessageBox.Warning)
         self.setEnabled(True)
 
     def handle_quick_select_src_dir_btn(self):
@@ -193,13 +224,12 @@ class MainWindow(QMainWindow):
             files = glob.glob(f'{self.srcDirTextBox.text()}/*.pdf')
             if files:
                 out_file = f"{tempdir}/preview.pdf"
-                marker.mark_pdf(files[0], f'{self.outDirTextBox.text()}/{out_file}', self.watermarkTxtBox.toPlainText(), only_first_page=True)
+                self.mark_pdf(files[0], out_file, self.watermarkTxtBox.toPlainText(), only_first_page=True)
                 os.system("open " + out_file)
             else:
                 self.show_msg_box("Cannot find any PDFs.", "Error", icon=QMessageBox.Warning)
         else:
             self.show_msg_box("Invalid Source Directory.", "Error", icon=QMessageBox.Warning)
-        print(tempdir)
 
     def batch_add_watermark(self):
         # TODO: use a cross-platform directory library
@@ -224,7 +254,8 @@ class MainWindow(QMainWindow):
                     elif self.addPrefixRadioBtn:
                         out_file += self.prefixTextBox.text() + ".pdf"
 
-                    marker.mark_pdf(src_file, f'{self.outDirTextBox.text()}/{out_file}', self.watermarkTxtBox.toPlainText())
+                    self.mark_pdf(src_file, f'{self.outDirTextBox.text()}/{out_file}', self.watermarkTxtBox.toPlainText())
+
                     self.batchProgressBar.setValue(int(i / len(files) * 100))
                 self.batchProgressBar.setValue(100)
             else:
