@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QColorDialog, QFontDialog
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QColor, QPixmap, QPainter, QFont, QFontMetrics
-from PyPDF2 import PdfFileReader
+from PyPDF2 import PdfReader
 from reportlab.pdfgen import canvas
 from reportlab.lib import pagesizes, units
 
@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
         if src_file:
             out_file = f"{tempdir}/preview.pdf"
             self.mark_pdf(src_file, out_file, self.watermarkTxtBox.toPlainText(), only_first_page=True)
-            os.system("open " + out_file)
+            self.open_preview_file(out_file)
         else:
             self.show_msg_box("Invalid Source File.", "Error", icon=QMessageBox.Warning)
 
@@ -240,7 +240,7 @@ class MainWindow(QMainWindow):
             if files:
                 out_file = f"{tempdir}/preview.pdf"
                 self.mark_pdf(files[0], out_file, self.watermarkTxtBox.toPlainText(), only_first_page=True)
-                os.system("open " + out_file)
+                self.open_preview_file(out_file)
             else:
                 self.show_msg_box("Cannot find any PDFs.", "Error", icon=QMessageBox.Warning)
         else:
@@ -256,18 +256,20 @@ class MainWindow(QMainWindow):
             if files:
                 num_files = len(files)
                 s = "s" if num_files != 1 else ""
+
                 if self.srcDirTextBox.text() == self.outDirTextBox.text() and \
                     (self.copyFilenameRadioBtn.isChecked() \
                     or (self.addSuffixRadioBtn.isChecked() and self.suffixTextBox.text() == "") \
                     or (self.addPrefixRadioBtn.isChecked() and self.prefixTextBox.text() == "")) \
-                    and not self.show_msg_box(f"Are you sure you want to OVERWRITE {num_files} file{s}?\nYou can't undo this.", icon=QMessageBox.Warning, buttons=QMessageBox.No | QMessageBox.Yes):
+                    and self.show_msg_box(f"Are you sure you want to OVERWRITE {num_files} file{s}?\nYou can't undo this.", icon=QMessageBox.Warning, buttons=QMessageBox.No | QMessageBox.Yes) == QMessageBox.No:
                         return
-                elif not self.show_msg_box(f"Are you sure you want to mark {num_files} file{s}?", buttons=QMessageBox.No | QMessageBox.Yes):
+                elif self.show_msg_box(f"Are you sure you want to mark {num_files} file{s}?", buttons=QMessageBox.No | QMessageBox.Yes) == QMessageBox.No:
                     return
-                self.batchProgressBar.setValue(0)
+                # self.batchProgressBar.setValue(0)
                 for i in range(len(files)):
                     src_file = files[i]
-                    out_file = src_file.split("/")[-1].split("\]")[-1].split(".")[0]
+                    out_file = src_file.split("/")[-1].split("\\")[-1].split("\]")[-1].split(".")[0]
+                    print(out_file)
                     if self.copyFilenameRadioBtn.isChecked():
                         out_file += ".pdf"
                     elif self.addWatermarkedSuffixRadioBtn.isChecked():
@@ -279,8 +281,8 @@ class MainWindow(QMainWindow):
 
                     self.mark_pdf(src_file, f'{self.outDirTextBox.text()}/{out_file}', self.watermarkTxtBox.toPlainText())
 
-                    self.batchProgressBar.setValue(int(i / len(files) * 100))
-                self.batchProgressBar.setValue(100)
+                #     self.batchProgressBar.setValue(int(i / len(files) * 100))
+                # self.batchProgressBar.setValue(100)
             else:
                 self.show_msg_box(
                     text="Cannot find any PDFs.",
@@ -304,7 +306,7 @@ class MainWindow(QMainWindow):
         if title is not None: msg.setWindowTitle(title)
         if info is not None: msg.setInformativeText(info)
         if buttons is not None: msg.setStandardButtons(buttons)
-        msg.exec_()
+        return msg.exec_()
             
 
     def update_preview(self):
@@ -315,7 +317,8 @@ class MainWindow(QMainWindow):
             if self.tabWidget.currentWidget() is self.singleTab:
                 filename = self.singleSrcFileTxtBox.text()
                 if filename and os.path.isfile(filename):
-                    pagesize = [float(e) for e in PdfFileReader(open(filename, "rb")).getPage(0).mediaBox[2:]]
+                    with open(filename, "rb") as page:
+                        pagesize = [float(e) for e in PdfReader(page).getPage(0).mediaBox[2:]]
                     orientation = "portrait"
                 else:
                     pagesize = pagesizes.letter
@@ -324,7 +327,8 @@ class MainWindow(QMainWindow):
                 file_list = self.get_batch_file_list()
                 if file_list:
                     filename = file_list[0]
-                    pagesize = [float(e) for e in PdfFileReader(open(filename, "rb")).getPage(0).mediaBox[2:]]
+                    with open(filename, "rb") as page:
+                        pagesize = [float(e) for e in PdfReader(page).getPage(0).mediaBox[2:]]
                     orientation = "portrait"
                 else:
                     pagesize = pagesizes.letter
@@ -333,7 +337,8 @@ class MainWindow(QMainWindow):
             pagesize = self.pagesizes[pagesize]
 
         pageRatio = pagesize[0] / pagesize[1]
-        if orientation == "landscape": pageRatio = 1 / pageRatio
+        if orientation == "landscape":
+            pageRatio = 1 / pageRatio
 
         drawHeight = self.previewCanvas.height() - 10
         page = [
@@ -344,10 +349,10 @@ class MainWindow(QMainWindow):
         painter.begin(self.previewPixmap)
         painter.fillRect(0, 0, self.previewPixmap.width(), self.previewPixmap.height(), QColor(200, 200, 200))
         pageRect = [
-            self.previewPixmap.width() / 2 - page[0] / 2,
-            self.previewPixmap.height() / 2 - page[1] / 2,
-            page[0],
-            page[1]
+            int(self.previewPixmap.width() / 2 - page[0] / 2),
+            int(self.previewPixmap.height() / 2 - page[1] / 2),
+            int(page[0]),
+            int(page[1])
         ]
         painter.fillRect(pageRect[0] - 1, pageRect[1] - 1, pageRect[2] + 2, pageRect[3] + 2, QColor(0, 0, 0))
         painter.fillRect(*pageRect, QColor(255, 255, 255))
@@ -367,12 +372,11 @@ class MainWindow(QMainWindow):
 
         test_width = max([QFontMetrics(text_font).width(line) for line in text_lines])
         test_ratio = test_width / len(text_lines)
-        text_size = math.sqrt(((pageRect[2] * marker.text_scale)**2 + (pageRect[3] * marker.text_scale)**2)) / (test_ratio + 1) / len(text_lines)
+        text_size = int(math.sqrt(((pageRect[2] * marker.text_scale)**2 + (pageRect[3] * marker.text_scale)**2)) / (test_ratio + 1) / len(text_lines))
 
         text_font.setPointSize(text_size)
         painter.setFont(text_font)
-        painter.setPen(QColor(*[e*255 for e in marker.text_color], marker.text_opacity * 255))
-        text_width = QFontMetrics(text_font).width(text)
+        painter.setPen(QColor(*[int(e*255) for e in marker.text_color], int(marker.text_opacity * 255)))
 
         angle = math.atan2(pageRect[2], pageRect[3])
         painter.translate(pageRect[0] + pageRect[2]/2, pageRect[1] + pageRect[3]/2)
@@ -380,9 +384,15 @@ class MainWindow(QMainWindow):
 
         i = -(len(text_lines) - 1) / 2
         for line in text_lines:
-            painter.drawText(-QFontMetrics(text_font).width(line) / 2, text_size / 3 + text_size * i, line)
+            painter.drawText(
+                int(-QFontMetrics(text_font).width(line) / 2),
+                int(text_size / 3 + text_size * i),
+                line
+            )
             i += 1
 
-        # painter.drawText(-text_width / 2, text_size / 3, text)
-
         self.previewCanvas.setPixmap(self.previewPixmap)
+
+    def open_preview_file(self, filename):
+        # os.system("open " + filename)  # *nix
+        os.system("start " + filename)  # Windows
