@@ -1,5 +1,5 @@
-Pillow==6.2.1
-PyPDF2==1.26.0
-PyQt5==5.13.2
-PyQt5-sip==12.7.0
-reportlab==3.5.32
+Pillow==11.1.0
+PyPDF2==2.12.1
+PyQt5==5.15.11
+PyQt5-sip==12.17.0
+reportlab==4.4.1
