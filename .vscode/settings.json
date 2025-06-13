@@ -1,3 +1,14 @@
 {
-    "python.pythonPath": "venv/bin/python3"
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "python.defaultInterpreterPath": "venv\\Scripts\\python.exe",
+  "isort.args": ["--profile=black"],
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoImportCompletions": true
 }

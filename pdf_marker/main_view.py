@@ -1,22 +1,22 @@
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QColorDialog, QFontDialog
-from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QColor, QPixmap, QPainter, QFont, QFontMetrics
-from PyPDF2 import PdfReader
-from reportlab.pdfgen import canvas
-from reportlab.lib import pagesizes, units
-
-import marker
-
-import tempfile
-import math
 import glob
 import io
+import math
 import os
+import tempfile
 
-from py_mainwindow import Ui_MainWindow
+from PyPDF2 import PdfReader
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QColor, QFont, QFontMetrics, QPainter, QPixmap
+from PyQt5.QtWidgets import QColorDialog, QFileDialog, QMainWindow, QMessageBox
+from reportlab.lib import pagesizes, units
+from reportlab.pdfgen import canvas
+
+import pdf_marker.marker as marker
+from pdf_marker.py_mainwindow import Ui_MainWindow
+
 
 class MainWindow(QMainWindow):
-    
+
     def __init__(self):
         super().__init__()
         # uic.loadUi('mainwindow.ui', self)
@@ -39,16 +39,11 @@ class MainWindow(QMainWindow):
 
         self.previewPagesizeDropdown.addItem("From File")
         self.pagesizes = {}
-        unit_dict = {
-            units.inch: '"',
-            units.cm: 'cm',
-            units.mm: 'mm',
-            units.pica: 'p'
-        }
+        unit_dict = {units.inch: '"', units.cm: "cm", units.mm: "mm", units.pica: "p"}
         for elem in reversed(dir(pagesizes)):
-            if ord(elem[0]) >= ord('A') and ord(elem[0]) <= ord('Z'):
+            if ord(elem[0]) >= ord("A") and ord(elem[0]) <= ord("Z"):
                 psize = getattr(pagesizes, elem)
-                elem_str = elem.title().replace('_', ' ')
+                elem_str = elem.title().replace("_", " ")
                 if psize is pagesizes.ELEVENSEVENTEEN:
                     elem_str = "Eleven Seventeen"
                 # TODO: Config file to pick what units are shown
@@ -58,8 +53,12 @@ class MainWindow(QMainWindow):
                     elem_str += f" ({w}{symbol} x {h}{symbol})"
                 self.pagesizes[elem_str] = psize
                 self.previewPagesizeDropdown.addItem(elem_str)
-        self.previewPagesizeDropdown.currentTextChanged.connect(self.update_preview_page)
-        self.previewOrientationDropdown.currentTextChanged.connect(self.update_preview_page)
+        self.previewPagesizeDropdown.currentTextChanged.connect(
+            self.update_preview_page
+        )
+        self.previewOrientationDropdown.currentTextChanged.connect(
+            self.update_preview_page
+        )
 
         self.fontDropdown.clear()
         for font in canvas.Canvas(io.BytesIO()).getAvailableFonts():
@@ -71,9 +70,14 @@ class MainWindow(QMainWindow):
         self.fontSizeSlider.setValue(90)  # TODO: Set from config
         self.fontSizeSlider.valueChanged.connect(self.handle_font_size_slider_change)
 
-        self.watermark_color_label_style = "QWidget {{ border: 1px solid #000; background-color: {0}}}"
+        self.watermark_color_label_style = (
+            "QWidget {{ border: 1px solid #000; background-color: {0}}}"
+        )
         self.selectColorBtn.clicked.connect(self.handle_select_color_btn)
-        self.set_watermark_color(color=QColor.fromRgb(*[int(e * 255) for e in marker.text_color]), opacity=marker.text_opacity)
+        self.set_watermark_color(
+            color=QColor.fromRgb(*[int(e * 255) for e in marker.text_color]),
+            opacity=marker.text_opacity,
+        )
         self.opacitySlider.setValue(int(marker.text_opacity * 100))
         # TODO: Set color and opacity from config
         self.opacitySlider.valueChanged.connect(self.handle_opacity_slider_change)
@@ -105,7 +109,9 @@ class MainWindow(QMainWindow):
             marker.mark_pdf(text, src_file, out_file, only_first_page=only_first_page)
             no_errors = True
         except Exception as ex:
-            self.show_msg_box("Error Processing PDF", "Error", str(ex), QMessageBox.Warning)
+            self.show_msg_box(
+                "Error Processing PDF", "Error", str(ex), QMessageBox.Warning
+            )
         return no_errors
 
     def update_preview_page(self):
@@ -119,7 +125,7 @@ class MainWindow(QMainWindow):
             self.previewOrientationDropdown.setEnabled(True)
             psize = self.pagesizes[size]
         if orientation.lower() == "landscape":
-            psize = psize[::-1]  
+            psize = psize[::-1]
         self.update_preview()
 
     def set_watermark_font(self, font=None):
@@ -129,8 +135,10 @@ class MainWindow(QMainWindow):
 
     def set_watermark_color(self, *, color=None, opacity=None):
         if color is not None:
-            self.colorLabel.setStyleSheet(self.watermark_color_label_style.format(color.name()))
-            marker.text_color = [e/255.0 for e in color.getRgb()[:3]]
+            self.colorLabel.setStyleSheet(
+                self.watermark_color_label_style.format(color.name())
+            )
+            marker.text_color = [e / 255.0 for e in color.getRgb()[:3]]
         if opacity is not None:
             marker.text_opacity = opacity
         self.update_preview()
@@ -143,7 +151,7 @@ class MainWindow(QMainWindow):
         dialog.setWindowTitle("Select Text Color")
         dialog.colorSelected.connect(lambda c: self.set_watermark_color(color=c))
         dialog.show()
-        
+
     def handle_opacity_slider_change(self, *, ignore=False):
         self.set_watermark_color(opacity=self.opacitySlider.value() / 100.0)
         self.update_preview()
@@ -170,7 +178,9 @@ class MainWindow(QMainWindow):
         self.resize(self.width(), preview_height)
 
     def handle_select_single_src_file(self):
-        filename = QFileDialog.getOpenFileName(self, 'Select Source PDF', '', '*.pdf, *.PDF')[0]
+        filename = QFileDialog.getOpenFileName(
+            self, "Select Source PDF", "", "*.pdf, *.PDF"
+        )[0]
         if filename:
             self.singleSrcFileTxtBox.setText(filename)
             self.update_preview()
@@ -180,7 +190,12 @@ class MainWindow(QMainWindow):
         src_file = self.singleSrcFileTxtBox.text()
         if src_file:
             out_file = f"{tempdir}/preview.pdf"
-            self.mark_pdf(src_file, out_file, self.watermarkTxtBox.toPlainText(), only_first_page=True)
+            self.mark_pdf(
+                src_file,
+                out_file,
+                self.watermarkTxtBox.toPlainText(),
+                only_first_page=True,
+            )
             self.open_preview_file(out_file)
         else:
             self.show_msg_box("Invalid Source File.", "Error", icon=QMessageBox.Warning)
@@ -189,32 +204,63 @@ class MainWindow(QMainWindow):
         self.setEnabled(False)
         text = self.watermarkTxtBox.toPlainText()
         src_filename = self.singleSrcFileTxtBox.text()
-        if text: 
+        if text:
             if src_filename:
                 if self.mark_pdf(src_filename, src_filename, text):
-                    self.show_msg_box("Done", "Done", "Saved as " + src_filename.split("/")[-1], buttons=QMessageBox.Ok)   
+                    self.show_msg_box(
+                        "Done",
+                        "Done",
+                        "Saved as " + src_filename.split("/")[-1],
+                        buttons=QMessageBox.Ok,
+                    )
             else:
-                self.show_msg_box("Invalid Source Filename", "Error", src_filename, QMessageBox.Warning)
+                self.show_msg_box(
+                    "Invalid Source Filename",
+                    "Error",
+                    src_filename,
+                    QMessageBox.Warning,
+                )
         else:
-            self.show_msg_box("Invalid Watermark Text", "Error", text, QMessageBox.Warning)
+            self.show_msg_box(
+                "Invalid Watermark Text", "Error", text, QMessageBox.Warning
+            )
         self.setEnabled(True)
 
     def handle_single_save_as(self):
         self.setEnabled(False)
         text = self.watermarkTxtBox.toPlainText()
-        if text: 
+        if text:
             src_filename = self.singleSrcFileTxtBox.text()
-            if src_filename: 
-                out_filename = QFileDialog.getSaveFileName(self, 'Save Watermarked PDF', src_filename, '*.pdf, *.PDF')[0]
+            if src_filename:
+                out_filename = QFileDialog.getSaveFileName(
+                    self, "Save Watermarked PDF", src_filename, "*.pdf, *.PDF"
+                )[0]
                 if out_filename:
                     if self.mark_pdf(src_filename, out_filename, text):
-                        self.show_msg_box("Done", "Done", "Saved as " + out_filename.split("/")[-1], buttons=QMessageBox.Ok)
+                        self.show_msg_box(
+                            "Done",
+                            "Done",
+                            "Saved as " + out_filename.split("/")[-1],
+                            buttons=QMessageBox.Ok,
+                        )
                 else:
-                    self.show_msg_box("Invalid Output Filename", "Error", out_filename, QMessageBox.Warning)
+                    self.show_msg_box(
+                        "Invalid Output Filename",
+                        "Error",
+                        out_filename,
+                        QMessageBox.Warning,
+                    )
             else:
-                self.show_msg_box("Invalid Source Filename", "Error", src_filename, QMessageBox.Warning)
+                self.show_msg_box(
+                    "Invalid Source Filename",
+                    "Error",
+                    src_filename,
+                    QMessageBox.Warning,
+                )
         else:
-            self.show_msg_box("Invalid Watermark Text", "Error", text, QMessageBox.Warning)
+            self.show_msg_box(
+                "Invalid Watermark Text", "Error", text, QMessageBox.Warning
+            )
         self.setEnabled(True)
 
     def handle_quick_select_src_dir_btn(self):
@@ -224,30 +270,39 @@ class MainWindow(QMainWindow):
         self.outDirTextBox.setText(os.path.dirname(os.path.realpath(__file__)))
 
     def handle_batch_select_src_dir_btn(self):
-        new_dir = QFileDialog.getExistingDirectory(self, 'Select Source Directory')
+        new_dir = QFileDialog.getExistingDirectory(self, "Select Source Directory")
         if new_dir:
             self.srcDirTextBox.setText(new_dir)
 
     def handle_batch_select_out_dir_btn(self):
-        new_dir = QFileDialog.getExistingDirectory(self, 'Select Output Directory')
+        new_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
         if new_dir:
             self.outDirTextBox.setText(new_dir)
 
     def handle_batch_preview_btn(self):
         tempdir = tempfile.gettempdir()
         if self.srcDirTextBox.text():
-            files = glob.glob(f'{self.srcDirTextBox.text()}/*.pdf')
+            files = glob.glob(f"{self.srcDirTextBox.text()}/*.pdf")
             if files:
                 out_file = f"{tempdir}/preview.pdf"
-                self.mark_pdf(files[0], out_file, self.watermarkTxtBox.toPlainText(), only_first_page=True)
+                self.mark_pdf(
+                    files[0],
+                    out_file,
+                    self.watermarkTxtBox.toPlainText(),
+                    only_first_page=True,
+                )
                 self.open_preview_file(out_file)
             else:
-                self.show_msg_box("Cannot find any PDFs.", "Error", icon=QMessageBox.Warning)
+                self.show_msg_box(
+                    "Cannot find any PDFs.", "Error", icon=QMessageBox.Warning
+                )
         else:
-            self.show_msg_box("Invalid Source Directory.", "Error", icon=QMessageBox.Warning)
+            self.show_msg_box(
+                "Invalid Source Directory.", "Error", icon=QMessageBox.Warning
+            )
 
     def get_batch_file_list(self):
-        return glob.glob(f'{self.srcDirTextBox.text()}/*.pdf')
+        return glob.glob(f"{self.srcDirTextBox.text()}/*.pdf")
 
     def batch_add_watermark(self):
         # TODO: use a cross-platform directory library
@@ -257,19 +312,43 @@ class MainWindow(QMainWindow):
                 num_files = len(files)
                 s = "s" if num_files != 1 else ""
 
-                if self.srcDirTextBox.text() == self.outDirTextBox.text() and \
-                    (self.copyFilenameRadioBtn.isChecked() \
-                    or (self.addSuffixRadioBtn.isChecked() and self.suffixTextBox.text() == "") \
-                    or (self.addPrefixRadioBtn.isChecked() and self.prefixTextBox.text() == "")) \
-                    and self.show_msg_box(f"Are you sure you want to OVERWRITE {num_files} file{s}?\nYou can't undo this.", icon=QMessageBox.Warning, buttons=QMessageBox.No | QMessageBox.Yes) == QMessageBox.No:
-                        return
-                elif self.show_msg_box(f"Are you sure you want to mark {num_files} file{s}?", buttons=QMessageBox.No | QMessageBox.Yes) == QMessageBox.No:
+                if (
+                    self.srcDirTextBox.text() == self.outDirTextBox.text()
+                    and (
+                        self.copyFilenameRadioBtn.isChecked()
+                        or (
+                            self.addSuffixRadioBtn.isChecked()
+                            and self.suffixTextBox.text() == ""
+                        )
+                        or (
+                            self.addPrefixRadioBtn.isChecked()
+                            and self.prefixTextBox.text() == ""
+                        )
+                    )
+                    and self.show_msg_box(
+                        f"Are you sure you want to OVERWRITE {num_files} file{s}?\nYou can't undo this.",
+                        icon=QMessageBox.Warning,
+                        buttons=QMessageBox.No | QMessageBox.Yes,
+                    )
+                    == QMessageBox.No
+                ):
+                    return
+                elif (
+                    self.show_msg_box(
+                        f"Are you sure you want to mark {num_files} file{s}?",
+                        buttons=QMessageBox.No | QMessageBox.Yes,
+                    )
+                    == QMessageBox.No
+                ):
                     return
                 # self.batchProgressBar.setValue(0)
-                for i in range(len(files)):
-                    src_file = files[i]
-                    out_file = src_file.split("/")[-1].split("\\")[-1].split("\]")[-1].split(".")[0]
-                    print(out_file)
+                for src_file in files:
+                    out_file = (
+                        src_file.split("/")[-1]
+                        .split("\\")[-1]
+                        .split("\\]")[-1]
+                        .split(".")[0]
+                    )
                     if self.copyFilenameRadioBtn.isChecked():
                         out_file += ".pdf"
                     elif self.addWatermarkedSuffixRadioBtn.isChecked():
@@ -279,7 +358,11 @@ class MainWindow(QMainWindow):
                     elif self.addPrefixRadioBtn.isChecked():
                         out_file += self.prefixTextBox.text() + ".pdf"
 
-                    self.mark_pdf(src_file, f'{self.outDirTextBox.text()}/{out_file}', self.watermarkTxtBox.toPlainText())
+                    self.mark_pdf(
+                        src_file,
+                        f"{self.outDirTextBox.text()}/{out_file}",
+                        self.watermarkTxtBox.toPlainText(),
+                    )
 
                 #     self.batchProgressBar.setValue(int(i / len(files) * 100))
                 # self.batchProgressBar.setValue(100)
@@ -288,13 +371,13 @@ class MainWindow(QMainWindow):
                     text="Cannot find any PDFs.",
                     title="Error",
                     info=self.srcDirTextBox.text(),
-                    icon=QMessageBox.Warning
+                    icon=QMessageBox.Warning,
                 )
         else:
             src_invalid = not self.srcDirTextBox.text()
             out_invalid = not self.outDirTextBox.text()
             text = "Invalid "
-            text += (("Source & " if out_invalid else "Source ") if src_invalid else "")
+            text += "Source & " if out_invalid else "Source " if src_invalid else ""
             text += "Output " if out_invalid else ""
             text += "Director" + ("ies" if src_invalid and out_invalid else "y") + "."
             self.show_msg_box(text=text, title="Error", icon=QMessageBox.Warning)
@@ -302,12 +385,15 @@ class MainWindow(QMainWindow):
     def show_msg_box(self, text="", title="", info=None, icon=None, buttons=None):
         msg = QMessageBox(self)
         msg.setIcon(icon if icon is not None else QMessageBox.Information)
-        if text is not None: msg.setText(text)
-        if title is not None: msg.setWindowTitle(title)
-        if info is not None: msg.setInformativeText(info)
-        if buttons is not None: msg.setStandardButtons(buttons)
+        if text is not None:
+            msg.setText(text)
+        if title is not None:
+            msg.setWindowTitle(title)
+        if info is not None:
+            msg.setInformativeText(info)
+        if buttons is not None:
+            msg.setStandardButtons(buttons)
         return msg.exec_()
-            
 
     def update_preview(self):
         painter = QPainter()
@@ -318,7 +404,9 @@ class MainWindow(QMainWindow):
                 filename = self.singleSrcFileTxtBox.text()
                 if filename and os.path.isfile(filename):
                     with open(filename, "rb") as page:
-                        pagesize = [float(e) for e in PdfReader(page).getPage(0).mediaBox[2:]]
+                        pagesize = [
+                            float(e) for e in PdfReader(page).getPage(0).mediaBox[2:]
+                        ]
                     orientation = "portrait"
                 else:
                     pagesize = pagesizes.letter
@@ -328,7 +416,9 @@ class MainWindow(QMainWindow):
                 if file_list:
                     filename = file_list[0]
                     with open(filename, "rb") as page:
-                        pagesize = [float(e) for e in PdfReader(page).getPage(0).mediaBox[2:]]
+                        pagesize = [
+                            float(e) for e in PdfReader(page).getPage(0).mediaBox[2:]
+                        ]
                     orientation = "portrait"
                 else:
                     pagesize = pagesizes.letter
@@ -341,20 +431,29 @@ class MainWindow(QMainWindow):
             pageRatio = 1 / pageRatio
 
         drawHeight = self.previewCanvas.height() - 10
-        page = [
-            drawHeight * pageRatio,
-            drawHeight
-        ]
+        page = [drawHeight * pageRatio, drawHeight]
         self.previewPixmap = QPixmap(self.previewCanvas.size())
         painter.begin(self.previewPixmap)
-        painter.fillRect(0, 0, self.previewPixmap.width(), self.previewPixmap.height(), QColor(200, 200, 200))
+        painter.fillRect(
+            0,
+            0,
+            self.previewPixmap.width(),
+            self.previewPixmap.height(),
+            QColor(200, 200, 200),
+        )
         pageRect = [
             int(self.previewPixmap.width() / 2 - page[0] / 2),
             int(self.previewPixmap.height() / 2 - page[1] / 2),
             int(page[0]),
-            int(page[1])
+            int(page[1]),
         ]
-        painter.fillRect(pageRect[0] - 1, pageRect[1] - 1, pageRect[2] + 2, pageRect[3] + 2, QColor(0, 0, 0))
+        painter.fillRect(
+            pageRect[0] - 1,
+            pageRect[1] - 1,
+            pageRect[2] + 2,
+            pageRect[3] + 2,
+            QColor(0, 0, 0),
+        )
         painter.fillRect(*pageRect, QColor(255, 255, 255))
 
         text = self.watermarkTxtBox.toPlainText()
@@ -372,14 +471,28 @@ class MainWindow(QMainWindow):
 
         test_width = max([QFontMetrics(text_font).width(line) for line in text_lines])
         test_ratio = test_width / len(text_lines)
-        text_size = int(math.sqrt(((pageRect[2] * marker.text_scale)**2 + (pageRect[3] * marker.text_scale)**2)) / (test_ratio + 1) / len(text_lines))
+        text_size = int(
+            math.sqrt(
+                (
+                    (pageRect[2] * marker.text_scale) ** 2
+                    + (pageRect[3] * marker.text_scale) ** 2
+                )
+            )
+            / (test_ratio + 1)
+            / len(text_lines)
+        )
 
         text_font.setPointSize(text_size)
         painter.setFont(text_font)
-        painter.setPen(QColor(*[int(e*255) for e in marker.text_color], int(marker.text_opacity * 255)))
+        painter.setPen(
+            QColor(
+                *[int(e * 255) for e in marker.text_color],
+                int(marker.text_opacity * 255),
+            )
+        )
 
         angle = math.atan2(pageRect[2], pageRect[3])
-        painter.translate(pageRect[0] + pageRect[2]/2, pageRect[1] + pageRect[3]/2)
+        painter.translate(pageRect[0] + pageRect[2] / 2, pageRect[1] + pageRect[3] / 2)
         painter.rotate(-(90 - math.degrees(angle)))
 
         i = -(len(text_lines) - 1) / 2
@@ -387,7 +500,7 @@ class MainWindow(QMainWindow):
             painter.drawText(
                 int(-QFontMetrics(text_font).width(line) / 2),
                 int(text_size / 3 + text_size * i),
-                line
+                line,
             )
             i += 1
 
